@@ -1,0 +1,33 @@
+const std = import "@stdlib"
+
+pub struct File {
+	success: bool,
+	length: int,
+	content: *char,
+}
+
+pub fn read_file(file: *char): File {
+	let result = File {
+		success: false,
+		length: 0,
+		content: null
+	};
+	let file = std::fopen(file, "r");
+	if file == null { return result; }
+
+	std::fseek(file, 0, std::FileSeek::End);
+	let size = std::ftell(file);
+	std::fseek(file, 0, std::FileSeek::Start);
+
+	let buffer: *char = std::malloc(size + 1);
+
+	std::fread(buffer, 1, size, file);
+	buffer[size] = '\0';
+	std::fclose(file);
+
+	result.content = buffer;
+	result.length = size;
+	result.success = true;
+	return result;
+}
+

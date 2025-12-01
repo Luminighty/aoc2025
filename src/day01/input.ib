@@ -1,0 +1,79 @@
+const fs = import "../utils/fs"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+
+const filename = "./inputs/day01.txt";
+
+struct Input {
+	rotations: *mod::Rotation,
+	count: int,
+}
+
+struct Lexer {
+	content: str,
+	length: int,
+	current: int
+}
+
+pub fn parse_input(): Input {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+	let count = string::line_count(file.content);
+	let rotations: *mod::Rotation = std::malloc(sizeof(mod::Rotation) * count);
+	let lexer = Lexer { content: file.content, length: file.length, current: 0 };
+	for let i = 0; i < count; i += 1 {
+		parse_rotation(&lexer, &rotations[i]);
+		consume(&lexer, '\n');
+	}
+
+	return Input { rotations, count, };
+}
+
+
+fn parse_rotation(lexer: *Lexer, rotation: *mod::Rotation) {
+	let start = lexer.current;
+	match curr(lexer) {
+		'L' => rotation.dir = mod::Dir::Left,
+		'R' => rotation.dir = mod::Dir::Right,
+		_ => {
+			std::printf("Expected L/R but got %c", curr(lexer));
+		}
+	}
+	lexer.current += 1;
+	rotation.amount = parse_number(lexer);
+	let end_temp = curr(lexer);
+	if rotation.amount < 0 {
+		lexer.content[lexer.current] = '\0';
+		std::printf("Rotation amount was negative!\n");
+		std::printf("  %s", &lexer.content[start]);
+		lexer.content[lexer.current] = end_temp;
+		std::exit(1);
+	}
+}
+
+fn parse_number(lexer: *Lexer): int {
+	let v = 0;
+	while is_numeric(curr(lexer)) {
+		let d: int = curr(lexer) - '0';
+		v = (v * 10) + d;
+		lexer.current += 1;
+	}
+	return v;
+}
+
+fn is_numeric(c: char): bool {
+	return c >= '0' && c <= '9';
+}
+
+fn consume(lexer: *Lexer, c: char) {
+	if curr(lexer) != c {
+		std::printf("Expected '%c', but got '%c' at %d", c, lexer.content[lexer.current], lexer.current);
+		std::exit(1);
+	}
+	lexer.current += 1;
+}
+
+fn curr(lexer: *Lexer): char {
+	return lexer.content[lexer.current];
+}

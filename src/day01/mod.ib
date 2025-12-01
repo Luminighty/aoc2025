@@ -1,0 +1,81 @@
+const std = import "@stdlib"
+const input = import "./input"
+
+pub const TITLE = "Day 1: Secret Entrance";
+
+pub enum Dir {
+	Left, Right
+}
+
+pub struct Rotation {
+	dir: Dir,
+	amount: int,
+}
+
+
+pub fn solve_a() {
+	let inp = input::parse_input();
+	let rotations = inp.rotations;
+
+	let state = 50;
+	let password = 0;
+	for let i = 0; i < inp.count; i += 1 {
+		// print_rotation(&rotations[i]);
+		apply_rotation(&state, &rotations[i]);
+		// std::printf("\tstate: %d\n", state);
+		if state == 0 { password += 1; }
+	}
+	std::printf("password: %d\n", password);
+}
+
+
+const DIAL_SIZE = 100;
+
+fn apply_rotation(state: *int, rotation: *Rotation) {
+	let v = rotation.amount;
+	if rotation.dir == Dir::Left { v *= -1; }
+	*state = (((*state + v) % DIAL_SIZE) + DIAL_SIZE) % DIAL_SIZE;
+}
+
+
+pub fn solve_b() {
+	let inp = input::parse_input();
+	let rotations = inp.rotations;
+
+	let state = 50;
+	let password = 0;
+	for let i = 0; i < inp.count; i += 1 {
+		password += extra_clicks(state, &rotations[i]);
+		apply_rotation(&state, &rotations[i]);
+		//if state == 0 { password += 1; }
+	}
+	std::printf("password: %d\n", password);
+}
+
+
+fn extra_clicks(state: int, rotation: *Rotation): int {
+	let v = rotation.amount;
+	if rotation.dir == Dir::Left { 
+		v *= -1;
+		// eow
+		if state == 0 {
+			state = 100;
+		}
+	}
+	let new_state = state + v;
+	let clicks = new_state / DIAL_SIZE;
+	if clicks < 0 { clicks *= -1; }
+	if new_state <= 0 { clicks += 1; }
+	//std::printf("state: %d new: %d, clicks: %d\n", state, new_state, clicks);
+	return clicks;
+}
+
+
+pub fn print_rotation(rotation: *Rotation) {
+	match rotation.dir {
+		Dir::Left => std::printf("Left"),
+		Dir::Right => std::printf("Right"),
+	}
+	std::printf("\t%d", rotation.amount);
+}
+
