@@ -1,0 +1,152 @@
+const std = import "@stdlib"
+const input = import "./input"
+
+pub const TITLE = "Day 2: Gift Shop";
+
+pub struct Range { first: int, last: int }
+
+
+pub fn solve_a() {
+	let inp = input::parse_input();
+	let ranges = inp.ranges;
+	let sum = 0;
+	for let i = 0; i < inp.count; i+=1 {
+		sum += sum_invalid_ids(ranges[i]);
+	}
+	std::printf("invalid id sum: %ld\n", sum);
+}
+
+
+fn sum_invalid_ids(range: Range): int {
+	let sum = 0;
+	let min = trim_half(range.first, true);
+	let max = trim_half(range.last, false);
+	// print_range(range);
+	// std::printf(" %ld -> %ld\n", min, max);
+	for let n = min; n <= max; n+= 1 {
+		let doubled = double_digits(n);
+		if doubled >= range.first && doubled <= range.last {
+			sum += doubled;
+			//std::printf("%ld, ", doubled);
+		}
+	}
+	//std::printf("\n");
+	return sum;
+}
+
+fn double_digits(number: int): int {
+	let doubled = number;
+	let w = number_width(number);
+	for let i = 0; i < w; i+= 1 {
+		doubled *= 10;
+	}
+	return doubled + number;
+}
+
+fn trim_half(number: int, floor_odd_width: bool): int {
+	let w = number_width(number);
+	if floor_odd_width && w % 2 == 1 { w += 1; }
+	for let i = 0; i < w / 2; i+=1 {
+		number /= 10;
+	}
+	return number;
+}
+
+pub fn solve_b() {
+	let inp = input::parse_input();
+	let ranges = inp.ranges;
+	let sum = 0;
+	for let i = 0; i < inp.count; i+=1 {
+		sum += sum_invalid_ids_ex(ranges[i]);
+	}
+	std::printf("invalid id ex sum: %ld\n", sum);
+}
+
+fn sum_invalid_ids_ex(range: Range): int {
+	let ids: int[32 * 8] = [
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	];
+	let id_c = 0;
+
+	let sum = 0;
+	let width = range_digit_width(range);
+
+	//print_range(range);
+	//std::printf(" %d\n", width);
+	for let w = 2; w <= width; w+=1 {
+		let min = trim_div(range.first, w, true);
+		let max = trim_div(range.last, w, false);
+
+		for let n = min; n <= max; n+=1 {
+			let repeated = repeat_digits(n, w);
+			if repeated < range.first || repeated > range.last { continue; }
+			if contains(ids, id_c, repeated) { continue; }
+			//std::printf("%ld, ", repeated);
+			//std::assert(id_c < 32*8, "Not enough space for ids!");
+			ids[id_c] = repeated;
+			id_c += 1;
+			sum += repeated;
+		}
+	}
+	//std::printf("\n");
+	return sum;
+}
+
+fn contains(ids: *int, id_c: int, search_value: int): bool {
+	for let i = 0; i < id_c; i+=1 {
+		if ids[i] == search_value {
+			return true;
+		}
+	}
+	return false;
+}
+
+fn range_digit_width(range: Range): int {
+	let f = number_width(range.first);
+	let l = number_width(range.last);
+	if f > l { return f; }
+	return l;
+}
+
+fn repeat_digits(number: int, amount: int): int {
+	let repeated = number;
+	let w = number_width(number);
+	for let j = 0; j < amount - 1; j+= 1 {
+		for let i = 0; i < w; i+= 1 {
+			repeated *= 10;
+		}
+		repeated += number;
+	}
+	return repeated;
+}
+
+fn trim_div(number: int, divisor: int, floor_odd_width: bool): int {
+	let w = number_width(number) * (divisor - 1);
+	if floor_odd_width && w % divisor > 0 { w += divisor; }
+	for let i = 0; i < w / divisor; i+=1 {
+		number /= 10;
+	}
+	return number;
+}
+
+fn print_range(range: Range) {
+	std::printf("Range(%ld, %ld)", range.first, range.last);
+}
+
+
+fn number_width(n: int): int {
+	let width = 0;
+	while n > 0 {
+		width += 1;
+		n /= 10;
+	}
+	return width;
+}
+

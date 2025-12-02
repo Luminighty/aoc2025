@@ -1,0 +1,42 @@
+const fs = import "../utils/fs"
+const lex = import "../utils/lexer"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+
+//const filename = "./inputs/day02_ex.txt";
+const filename = "./inputs/day02.txt";
+
+struct Input {
+	ranges: *mod::Range,
+	count: int,
+}
+
+pub fn parse_input(): Input {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+
+	let lexer = lex::new(file.content, file.length);
+	let count = string::count_char(file.content, ',');
+
+	let ranges: *mod::Range = std::malloc(sizeof(mod::Range) * (count + 1));
+	for let i = 0; i < count; i += 1 {
+		ranges[i] = parse_range(&lexer);
+		lex::consume(&lexer, ',');
+	}
+	// Tail
+	ranges[count] = parse_range(&lexer);
+	count += 1;
+
+	std::free(file.content);
+	return Input { count, ranges };
+}
+
+
+fn parse_range(lexer: *lex::Lexer): mod::Range {
+	let first = lex::parse_number(lexer);
+	lex::consume(lexer, '-');
+	let last = lex::parse_number(lexer);
+	return mod::Range { first, last };
+}
+

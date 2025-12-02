@@ -35,3 +35,10 @@ let v = 0;
 let d: int = curr(lexer) - '0';
 v = (v * 10) + d;
 ```
+
+---
+
+Array initialization could be improved:
+```rs
+let s: char[32] = "                               ";
+```

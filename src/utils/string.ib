@@ -1,9 +1,25 @@
 pub fn line_count(s: str): int {
+	return count_char(s, '\n');
+}
+
+pub fn count_char(s: str, c: char): int {
 	let offset = 0;
-	let line_c = 0;
+	let count = 0;
 	while s[offset] != '\0' {
-		if s[offset] == '\n' { line_c += 1; }
+		if s[offset] == c { count += 1; }
 		offset += 1;
 	}
-	return line_c;
+	return count;
 }
+
+// For more context patterns
+pub fn count_pred(s: str, pred: fn(str): bool): int {
+	let offset = 0;
+	let count = 0;
+	while s[offset] != '\0' {
+		if pred(&s[offset]) { count += 1; }
+		offset += 1;
+	}
+	return count;
+}
+

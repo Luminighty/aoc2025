@@ -11,10 +11,16 @@ struct Input {}
 pub fn parse_input(): Input {
 	let file = fs::read_file(&filename);
 	std::assert(file.success, "Failed to open file\n");
-	let count = string::line_count(file.content);
 
+	let lexer = lex::new(file.content, file.length);
+	let count = string::count_char(file.content, ',');
+
+	// let data = std::malloc(sizeof() * (count));
+	for let i = 0; i < count; i += 1 {
+		// lex::consume(&lexer, ',');
+	}
 
 	std::free(file.content);
-	return Input { rotations, count, };
+	return Input { };
 }
 

@@ -1,10 +1,14 @@
 const std = import "@stdlib"
 const day01 = import "./day01/mod.ib"
-// const day02 = import "./day02/mod.ib"
+const day02 = import "./day02/mod.ib"
 
 fn main(): int {
-	std::printf("--- %s ---\n", &day01::TITLE);
-	day01::solve_a(); day01::solve_b();
-	// day02::solve_a(); day02::solve_b();
+	// title(&day01::TITLE); day01::solve_a(); day01::solve_b();
+	title(&day02::TITLE); day02::solve_a(); day02::solve_b();
 	return 0;
+}
+
+
+fn title(t: str) {
+	std::printf("--- %s ---\n", t);
 }
