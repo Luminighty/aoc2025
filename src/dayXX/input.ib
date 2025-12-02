@@ -1,0 +1,20 @@
+const fs = import "../utils/fs"
+const lex = import "../utils/lexer"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+
+const filename = "./inputs/day.txt";
+
+struct Input {}
+
+pub fn parse_input(): Input {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+	let count = string::line_count(file.content);
+
+
+	std::free(file.content);
+	return Input { rotations, count, };
+}
+

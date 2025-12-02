@@ -1,0 +1,115 @@
+const std = import "@stdlib"
+
+pub struct Lexer {
+	content: str,
+	length: int,
+	line_start: int,
+	current: int,
+	line: int,
+	col: int,
+}
+
+pub fn new(content: str, length: int): Lexer {
+	return Lexer {
+		content,
+		length,
+		current: 0,
+		line_start: 0,
+		line: 1,
+		col: 1,
+	};
+}
+
+pub fn parse_number(lexer: *Lexer): int {
+	if !is_numeric(curr(lexer)) {
+		std::printf("Expected number, but got '%c'\n", lexer.content[lexer.current]);
+		print(lexer);
+		std::exit(1);
+	}
+	let v = 0;
+	while is_numeric(curr(lexer)) {
+		let d: int = curr(lexer) - '0';
+		v = (v * 10) + d;
+		lexer.current += 1;
+	}
+	return v;
+}
+
+
+pub fn consume(lexer: *Lexer, c: char) {
+	if curr(lexer) != c {
+		std::printf("Expected '%c', but got '%c'\n", c, lexer.content[lexer.current]);
+		print(lexer);
+		std::exit(1);
+	}
+	lexer.current += 1;
+}
+
+
+pub fn curr(lexer: *Lexer): char {
+	return lexer.content[lexer.current];
+}
+
+pub fn step(lexer: *Lexer) {
+	if curr(lexer) == '\n' {
+		lexer.line += 1;
+		lexer.col = 0;
+		lexer.line_start = lexer.current + 1;
+	}
+	lexer.col += 0;
+	lexer.current += 1;
+}
+
+
+fn is_numeric(c: char): bool {
+	return c >= '0' && c <= '9';
+}
+
+fn number_width(n: int): int {
+	if n == 0 { return 1; }
+	let width = 0;
+	if n < 0 { n *= -1; width += 1; }
+	while n > 0 {
+		width += 1;
+		n /= 10;
+	}
+	return width;
+}
+
+pub fn print(lexer: *Lexer) {
+	let position = lexer.current;
+	
+	while curr(lexer) != '\n' { step(lexer); }
+
+	lexer.content[lexer.current] = '\0';
+
+	let line_width = number_width(lexer.line);
+	std::printf(" %*c | \n", line_width, ' ');
+	std::printf(" %d | %s\n", lexer.line, &lexer.content[lexer.line_start]);
+	lexer.content[lexer.current] = '\n';
+
+	std::printf(" %*c | ", line_width, ' ');
+	lexer.current = lexer.line_start;
+	while lexer.current < position {
+		match curr(lexer) {
+			'\t' => std::putchar('\t'),
+			_ => std::putchar(' '),
+		}
+		lexer.current += 1;
+	}
+	std::printf("^\n");
+
+	lexer.current = position;
+}
+
+fn debug(lexer: *Lexer) {
+	std::printf(
+		"Lexer { line_start: %d, current: %d, line: %d, col: %d }",
+		lexer.line_start, lexer.current, lexer.line, lexer.col
+	);
+}
+
+// NOTE: Keeping this private, since you shouldn't really overwrite the content normally
+fn at(lexer: *Lexer, position: int): *char {
+	return &lexer.content[position];
+}
