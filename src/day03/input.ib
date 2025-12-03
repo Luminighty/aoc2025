@@ -1,0 +1,40 @@
+const fs = import "../utils/fs"
+const lex = import "../utils/lexer"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+
+const filename = "./inputs/day03.txt";
+// const filename = "./inputs/day03_ex.txt";
+
+struct Input {
+	banks: *mod::Bank,
+	count: int,
+}
+
+pub fn parse_input(): Input {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+
+	let lexer = lex::new(file.content, file.length);
+	let count = string::line_count(file.content);
+
+	let banks: *mod::Bank = std::malloc(sizeof(mod::Bank) * (count));
+	for let i = 0; i < count; i += 1 {
+		parse_bank(&lexer, &banks[i]);
+		lex::consume(&lexer, '\n');
+	}
+
+	std::free(file.content);
+	return Input { banks, count };
+}
+
+
+fn parse_bank(lexer: *lex::Lexer, bank: *mod::Bank) {
+	let c = 0;
+	while lex::curr(lexer) != '\n' {
+		bank.batteries[c] = lex::parse_digit(lexer);
+		c += 1;
+	}
+	bank.size = c;
+}

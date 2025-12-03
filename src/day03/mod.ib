@@ -1,0 +1,81 @@
+const std = import "@stdlib"
+const input = import "./input"
+
+pub const TITLE = "Day 3: Lobby";
+
+pub struct Bank {
+	batteries: int[100],
+	size: int,
+}
+
+
+pub fn solve_a() {
+	let inp = input::parse_input();
+	let sum = 0;
+	for let i = 0; i < inp.count; i+=1 {
+		// print_bank(&inp.banks[i]);
+		let max = find_max_joltage(&inp.banks[i]);
+		sum += max;
+		// std::printf(" => %ld\n", max);
+	}
+	std::printf("Max total joltage: %d\n", sum);
+}
+
+
+fn find_max_joltage(bank: *Bank): int {
+	let tens = bank.batteries[0];
+	let ones = bank.batteries[1];
+	for let i = 1; i < bank.size; i+=1 {
+		let jolt = bank.batteries[i];
+		if jolt > tens && i < bank.size - 1 {
+			tens = jolt;
+			ones = bank.batteries[i + 1];
+		} else if jolt > ones {
+			ones = jolt;
+		}
+	}
+	return tens * 10 + ones;
+}
+
+
+pub fn solve_b() {
+	let inp = input::parse_input();
+	let sum = 0;
+	for let i = 0; i < inp.count; i+=1 {
+		// print_bank(&inp.banks[i]);
+		let max = find_max_joltage_12(&inp.banks[i]);
+		sum += max;
+		// std::printf("\n=> %ld\n", max);
+	}
+	std::printf("Max total joltage: %ld\n", sum);
+}
+
+
+fn find_max_joltage_12(bank: *Bank): int {
+	let jolts: int[12] = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, ];
+	let last_idx = -1;
+	for let i = 0; i < 12; i+=1 {
+	for let j = last_idx + 1; j < bank.size - (11 - i); j+=1 {
+		let jolt = bank.batteries[j];
+		if jolts[i] < jolt {
+			last_idx = j;
+			jolts[i] = jolt;
+		}
+	}}
+	let value = 0;
+	for let i = 0; i < 12; i+=1 {
+		value *= 10;
+		value += jolts[i];
+	}
+	return value;
+}
+
+
+fn print_bank(bank: *Bank) {
+	std::printf("Bank [");
+	for let i = 0; i < bank.size; i+=1 {
+		std::printf("%d", bank.batteries[i]);
+	}
+	std::printf("]");
+}
+

@@ -20,6 +20,18 @@ pub fn new(content: str, length: int): Lexer {
 	};
 }
 
+pub fn parse_digit(lexer: *Lexer): int {
+	if !is_numeric(curr(lexer)) {
+		std::printf("Expected number, but got '%c'\n", lexer.content[lexer.current]);
+		print(lexer);
+		std::exit(1);
+	}
+	let v: int = curr(lexer) - '0';
+	step(lexer);
+	return v;
+}
+
+
 pub fn parse_number(lexer: *Lexer): int {
 	if !is_numeric(curr(lexer)) {
 		std::printf("Expected number, but got '%c'\n", lexer.content[lexer.current]);
@@ -30,7 +42,7 @@ pub fn parse_number(lexer: *Lexer): int {
 	while is_numeric(curr(lexer)) {
 		let d: int = curr(lexer) - '0';
 		v = (v * 10) + d;
-		lexer.current += 1;
+		step(lexer);
 	}
 	return v;
 }
@@ -42,7 +54,7 @@ pub fn consume(lexer: *Lexer, c: char) {
 		print(lexer);
 		std::exit(1);
 	}
-	lexer.current += 1;
+	step(lexer);
 }
 
 
@@ -61,7 +73,7 @@ pub fn step(lexer: *Lexer) {
 }
 
 
-fn is_numeric(c: char): bool {
+pub fn is_numeric(c: char): bool {
 	return c >= '0' && c <= '9';
 }
 
