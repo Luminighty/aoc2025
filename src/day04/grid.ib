@@ -1,0 +1,59 @@
+const std = import "@stdlib"
+
+
+pub enum Tile {
+	SPACE,
+	PAPER,
+}
+
+
+pub struct Grid {
+	map: *Tile,
+	width: int,
+	height: int,
+}
+
+
+pub fn get(grid: *Grid, x: int, y: int): Tile {
+	if x < 0 || y < 0 || x >= grid.width || y >= grid.height {
+		return Tile::SPACE;
+	}
+	return grid.map[idx(grid, x, y)];
+}
+
+
+pub fn set(grid: *Grid, x: int, y: int, tile: Tile) {
+	if x < 0 || y < 0 || x >= grid.width || y >= grid.height {
+		return;
+	}
+	grid.map[idx(grid, x, y)] = tile;
+}
+
+
+fn idx(grid: *Grid, x: int, y: int): int {
+	return y * grid.width + x;
+}
+
+
+fn to_char(tile: Tile): char {
+	match tile {
+		Tile::SPACE => return '.';
+		Tile::PAPER => return '@';
+		_ => {
+			std::printf("Value %d is not a valid tile\n", tile);
+			std::exit(1);
+			return 'X';
+		}
+	}
+}
+
+
+pub fn print(grid: *Grid) {
+	for let y = 0; y < grid.height; y+=1 {
+		for let x = 0; x < grid.width; x+=1 {
+			std::putchar(to_char(get(grid, x, y)));
+		}
+		std::putchar('\n');
+	}
+}
+

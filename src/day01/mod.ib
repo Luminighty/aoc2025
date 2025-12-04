@@ -26,6 +26,7 @@ pub fn solve_a() {
 		if state == 0 { password += 1; }
 	}
 	std::printf("password: %d\n", password);
+	std::free(inp.rotations);
 }
 
 
@@ -50,6 +51,7 @@ pub fn solve_b() {
 		//if state == 0 { password += 1; }
 	}
 	std::printf("password: %d\n", password);
+	std::free(inp.rotations);
 }
 
 

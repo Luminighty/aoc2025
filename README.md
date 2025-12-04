@@ -42,3 +42,18 @@ Array initialization could be improved:
 ```rs
 let s: char[32] = "                               ";
 ```
+
+
+---
+
+
+Exhausting all cases will lead to compilation error, since tile might be an int, even though all cases had returned.
+Maybe in this case, we should assert on this?
+```rs
+fn to_char(tile: Tile): char {
+	match tile {
+		Tile::SPACE => return '.';
+		Tile::PAPER => return '@';
+	}
+}
+```

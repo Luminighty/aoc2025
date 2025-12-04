@@ -1,0 +1,66 @@
+const std = import "@stdlib"
+const input = import "./input"
+const grid = import "./grid"
+
+pub const TITLE = "Day 4: Printing Department";
+
+pub fn solve_a() {
+	let grid = input::parse_input();
+	// grid::print(&grid);
+	let count = 0;
+	for let y = 0; y < grid.height; y+=1 {
+	for let x = 0; x < grid.width; x+=1 {
+		if grid::get(&grid, x, y) != grid::Tile::PAPER {
+			continue;
+		}
+		let paper_c = paper_count(&grid, x, y);
+		if paper_c < 4 { count += 1; }
+	}}
+	std::printf("Forklift Accessible rolls: %d\n", count);
+
+	std::free(grid.map);
+}
+
+
+fn paper_count(grid: *grid::Grid, x: int, y: int): int {
+	let c = 0;
+
+	for let dx = -1; dx <= 1; dx+=1 {
+	for let dy = -1; dy <= 1; dy+=1 {
+		if dx == 0 && dy == 0 {continue;}
+		if grid::get(grid, x + dx, y + dy) == grid::Tile::PAPER {
+			c += 1;
+		}
+	}}
+	return c;
+}
+
+pub fn solve_b() {
+	let grid = input::parse_input();
+	let count = 0;
+	loop {
+		let removed = remove_rolls(&grid);
+		if removed == 0 { break; }
+		count += removed;
+	}
+	std::printf("Forklift Accessible rolls: %d\n", count);
+	std::free(grid.map);
+}
+
+
+fn remove_rolls(grid: *grid::Grid): int {
+	let count = 0;
+	for let y = 0; y < grid.height; y+=1 {
+	for let x = 0; x < grid.width; x+=1 {
+		if grid::get(grid, x, y) != grid::Tile::PAPER {
+			continue;
+		}
+		let paper_c = paper_count(grid, x, y);
+		if paper_c < 4 {
+			count += 1;
+			grid::set(grid, x, y, grid::Tile::SPACE);
+		}
+	}}
+	return count;
+}
+

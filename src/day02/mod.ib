@@ -14,6 +14,7 @@ pub fn solve_a() {
 		sum += sum_invalid_ids(ranges[i]);
 	}
 	std::printf("invalid id sum: %ld\n", sum);
+	std::free(inp.ranges);
 }
 
 
@@ -60,6 +61,7 @@ pub fn solve_b() {
 		sum += sum_invalid_ids_ex(ranges[i]);
 	}
 	std::printf("invalid id ex sum: %ld\n", sum);
+	std::free(inp.ranges);
 }
 
 fn sum_invalid_ids_ex(range: Range): int {

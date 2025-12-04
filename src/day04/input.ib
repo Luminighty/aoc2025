@@ -1,0 +1,57 @@
+const fs = import "../utils/fs"
+const lex = import "../utils/lexer"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+const grid = import "./grid"
+
+const filename = "./inputs/day04.txt";
+// const filename = "./inputs/day04_ex.txt";
+
+
+pub fn parse_input(): grid::Grid {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+
+	let lexer = lex::new(file.content, file.length);
+
+	let height = string::line_count(file.content);
+	let count = std::strlen(file.content) - height;
+	let width = count / height;
+
+	let map: *grid::Tile = std::malloc(sizeof(grid::Tile) * count);
+	for let i = 0; i < count; i += 1 {
+		map[i] = parse_tile(&lexer);
+		if i % height == width - 1 {
+			lex::consume(&lexer, '\n');
+		}
+	}
+
+	std::free(file.content);
+	return grid::Grid {
+		width, height, map
+	};
+}
+
+
+fn parse_tile(lexer: *lex::Lexer): grid::Tile {
+	match lex::curr(lexer) {
+		'.' => {
+			lex::step(lexer);
+			return grid::Tile::SPACE;
+		}
+		'@' => {
+			lex::step(lexer);
+			return grid::Tile::PAPER;
+		}
+		_ => {
+			std::printf("Unknown tile '%c'\n", lex::curr(lexer));
+			lex::print(lexer);
+			std::exit(1);
+			return grid::Tile::SPACE;
+		}
+	}
+}
+
+
+
