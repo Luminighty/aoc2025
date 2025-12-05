@@ -1,0 +1,70 @@
+const fs = import "../utils/fs"
+const lex = import "../utils/lexer"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+
+// const filename = "./inputs/day05_ex.txt";
+const filename = "./inputs/day05.txt";
+
+struct Input {
+	ranges: *mod::Range,
+	range_c: int,
+	ids: *int,
+	id_c: int,
+}
+
+pub fn parse_input(): Input {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+
+	let lexer = lex::new(file.content, file.length);
+
+	let counts = count_inputs(file.content);
+
+	let ranges: *mod::Range = std::malloc(sizeof(mod::Range) * (counts.ranges));
+	let ids: *int = std::malloc(sizeof(int) * (counts.ids));
+	for let i = 0; i < counts.ranges; i += 1 {
+		ranges[i].min = lex::parse_number(&lexer);
+		lex::consume(&lexer, '-');
+		ranges[i].max = lex::parse_number(&lexer);
+		lex::consume(&lexer, '\n');
+	}
+	lex::consume(&lexer, '\n');
+	for let i = 0; i < counts.ids; i += 1 {
+		ids[i] = lex::parse_number(&lexer);
+		lex::consume(&lexer, '\n');
+	}
+	std::free(file.content);
+	return Input { ranges, range_c: counts.ranges, ids, id_c: counts.ids };
+}
+
+
+struct InputCount { ranges: int, ids: int }
+
+fn count_inputs(content: str): InputCount {
+	let ranges = 0;
+	let ids = 0;
+	let i = 0;
+	let is_reading_ids = false;
+	while content[i] != '\0' {
+		if content[i] != '\n' {
+			i += 1;
+			continue;
+		}
+		if is_reading_ids {
+			ids += 1;
+		} else {
+			ranges += 1;
+		}
+		if content[i+1] == '\n' {
+			std::assert(!is_reading_ids, "Encountered a secondary new line separator");
+			is_reading_ids = true;
+			i += 2;
+			continue;
+		}
+		i += 1;
+	}
+	return InputCount { ranges, ids };
+}
+

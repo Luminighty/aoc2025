@@ -57,3 +57,12 @@ fn to_char(tile: Tile): char {
 	}
 }
 ```
+
+---
+
+Should throw typecheck error instead of unwrap...
+```rs
+fn range_size(range: *Range): int {
+
+}
+```

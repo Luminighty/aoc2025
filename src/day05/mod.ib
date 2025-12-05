@@ -1,0 +1,103 @@
+const std = import "@stdlib"
+const input = import "./input"
+
+pub const TITLE = "Day 5: Cafeteria";
+
+pub struct Range { min: int, max: int }
+
+pub fn solve_a() {
+	let inp = input::parse_input();
+	// std::printf("%d\n", inp.range_c);
+	
+	// for let i = 0; i < inp.range_c; i+=1 {
+	// 	print_range(&inp.ranges[i]);
+	// 	std::printf("\n");
+	// }
+	//
+	// for let i = 0; i < inp.id_c; i+=1 {
+	// 	std::printf("%ld\n", inp.ids[i]);
+	// }
+
+	let fresh_c = 0;
+	for let i = 0; i < inp.id_c; i+=1 {
+		if is_fresh(inp.ids[i], inp.ranges, inp.range_c) {
+			fresh_c += 1;
+		}
+	}
+
+	std::printf("Fresh ingredients: %d\n", fresh_c);
+}
+
+fn is_fresh(id: int, range: *Range, range_c: int): bool {
+	for let i = 0; i < range_c; i+=1 {
+		if in_range(id, &range[i]) {
+			return true;
+		}
+	}
+	return false;
+}
+
+fn in_range(id: int, range: *Range): bool {
+	return range.min <= id && id <= range.max;
+}
+
+
+pub fn solve_b() {
+	let inp = input::parse_input();
+
+	let sum = 0;
+	let range_c = inp.range_c;
+	for let i = 0; i < range_c; i+=1 {
+		let merged = false;
+		for let j = range_c - 1; j > i; j-=1 {
+			// std::printf("(i: %d, j: %d):\n", i, j);
+			if is_range_overlaps(&inp.ranges[i], &inp.ranges[j]) {
+				merged = true;
+				// std::printf("Merging ");
+				// print_range(&inp.ranges[i]);
+				// std::printf(" with ");
+				// print_range(&inp.ranges[j]);
+				
+				range_expand(&inp.ranges[i], &inp.ranges[j]);
+				
+				// std::printf(" => ");
+				// print_range(&inp.ranges[i]);
+				// std::printf("\n");
+				inp.ranges[j] = inp.ranges[range_c - 1];
+				range_c -= 1;
+			}
+		}
+		if merged {
+			i -= 1;
+			continue;
+		}
+
+		sum += range_size(&inp.ranges[i]);
+	}
+	// for let i = 0; i < range_c; i+=1 {
+	// 	print_range(&inp.ranges[i]);
+	// 	std::printf("\n");
+	// }
+	std::printf("All fresh ingredients: %ld\n", sum);
+}
+
+
+fn print_range(range: *Range) {
+	std::printf("Range(%ld - %ld)", range.min, range.max);
+}
+
+
+fn range_size(range: *Range): int {
+	return range.max - range.min + 1;
+
+}
+
+fn is_range_overlaps(a: *Range, b: *Range): bool {
+	return a.min <= b.max && b.min <= a.max;
+}
+
+fn range_expand(a: *Range, b: *Range) {
+	if b.min < a.min { a.min = b.min; }
+	if b.max > a.max { a.max = b.max; }
+}
+
