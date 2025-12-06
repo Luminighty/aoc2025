@@ -1,0 +1,87 @@
+const fs = import "../utils/fs"
+const lex = import "../utils/lexer"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+
+const filename = "./inputs/day06.txt";
+// const filename = "./inputs/day06_ex.txt";
+
+struct Input {
+	problems: *mod::Problem,
+	count: int,
+}
+
+
+pub fn parse_input(): Input {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+
+	let lexer = lex::new(file.content, file.length);
+	let count = count_problems(&file);
+	let operand_c = string::line_count(file.content) - 1;
+
+	let problems: *mod::Problem = std::malloc(sizeof(mod::Problem) * (count));
+
+	for let i = 0; i < count; i += 1 {
+		problems[i].operands = std::malloc(sizeof(int) * (operand_c));
+		problems[i].operand_c = operand_c;
+	}
+
+	for let op = 0; op < operand_c; op += 1 {
+		lex::consume_until(&lexer, whitespace);
+		for let i = 0; i < count; i += 1 {
+			problems[i].operands[op] = lex::parse_number(&lexer);
+
+			lex::consume_until(&lexer, whitespace);
+		}
+		lex::consume(&lexer, '\n');
+	}
+
+	for let i = 0; i < count; i += 1 {
+		problems[i].op = parse_op(&lexer);
+		lex::consume(&lexer, ' ');
+		lex::consume_until(&lexer, whitespace);
+	}
+
+	std::free(file.content);
+	return Input {
+		problems, count,
+	};
+}
+
+
+fn count_problems(file: *fs::File): int {
+	let lexer = lex::new(file.content, file.length);
+	let problem_count = 0;
+	while lex::curr(&lexer) != '\n' {
+		lex::parse_number(&lexer);
+		problem_count += 1;
+		lex::consume_until(&lexer, whitespace);
+	}
+	return problem_count;
+}
+
+
+fn whitespace(c: *char): bool {
+	return *c == ' ';
+}
+
+fn parse_op(lexer: *lex::Lexer): mod::Op {
+	match lex::curr(lexer) {
+		'*' => {
+			lex::step(lexer);
+			return mod::Op::Mul;
+		}
+		'+' => {
+			lex::step(lexer);
+			return mod::Op::Add;
+		}
+		_ => {
+			std::printf("Expected operand, but got '%c'\n", lex::curr(lexer));
+			lex::print(lexer);
+			std::exit(1);
+			return mod::Op::Add;
+		}
+	}
+}

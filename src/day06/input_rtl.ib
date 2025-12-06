@@ -1,0 +1,129 @@
+const fs = import "../utils/fs"
+const lex = import "../utils/lexer"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+
+const filename = "./inputs/day06.txt";
+// const filename = "./inputs/day06_ex.txt";
+
+struct Input {
+	problems: *mod::Problem,
+	count: int,
+}
+
+
+pub fn parse_input(): Input {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+
+	let line_height = string::line_count(file.content);
+	let line_width = count_line_width(file.content);
+	// std::printf("line_height: %d   line_width: %d\n", line_height, line_width);
+	let lines: *str = std::malloc(sizeof(str) * line_height);
+	{
+		lines[0] = file.content;
+		let current_line = 1;
+		for let i = 0; i < file.length; i+=1 {
+			if file.content[i] == '\n' {
+				std::assert(current_line < line_height, "Current line exceeded allocated space!");
+				lines[current_line] = &file.content[i+1];
+				current_line += 1;
+				// Why not
+				file.content[i] = '\0';
+			}
+		}
+		std::assert(current_line == line_height, "Missed some line!");
+	}
+	// for let i = 0; i < line_height; i+=1 {
+	// 	std::printf("lines[%d] = %s\n", i, lines[i]);
+	// }
+
+	let count = count_problems(lines[line_height - 1]);
+	// std::printf("Problems: %d\n", count);
+	let problems: *mod::Problem = std::malloc(sizeof(mod::Problem) * (count));
+	{
+		let line = lines[line_height - 1];
+		let current_problem = count - 1;
+		let operand_count = 0;
+		for let x = line_width-1; x >= 0; x-= 1 {
+			operand_count += 1;
+			if line[x] == '+' || line[x] == '*' {
+				problems[current_problem].operands = std::malloc(sizeof(int) * operand_count);
+				// std::printf("problem[%d].operand_c = %d\n", current_problem, operand_count);
+				// -1 for padding
+				operand_count = -1;
+				current_problem -= 1;
+			}
+		}
+	}
+
+	let current_problem = count - 1;
+	let current_operand = 0;
+	for let x = line_width-1; x >= 0; x-=1 {
+		let num = 0;
+		for let y = 0; y < line_height - 1; y+=1 {
+			let c = lines[y][x];
+			if c == ' ' { continue; }
+			let d = parse_digit(c);
+			num = num * 10 + d;
+		}
+		// std::printf("%d ", num);
+		problems[current_problem].operands[current_operand] = num;
+		current_operand += 1;
+		let op = lines[line_height-1][x];
+		if op != ' ' {
+			problems[current_problem].op = parse_op(op);
+			problems[current_problem].operand_c = current_operand;
+			current_problem -= 1;
+			current_operand = 0;
+			// Skip padding
+			x -= 1;
+			// std::printf("\n");
+		}
+	}
+
+	std::free(file.content);
+	return Input {
+		problems, count,
+	};
+}
+
+
+fn parse_digit(c: char): int {
+	std::assert(c >= '0' && c <= '9', "Failed to parse digit");
+	return c - '0';
+}
+
+
+fn count_problems(line: str): int {
+	let i = 0; 
+	let c = 0;
+	loop {
+		if line[i] == '\n' || line[i] == '\0' { break; }
+		if line[i] == '+' || line[i] == '*' { c+=1; }
+		i += 1;
+	}
+	return c;
+}
+
+fn parse_op(c: char): mod::Op {
+	match c {
+		'*' => return mod::Op::Mul;
+		'+' => return mod::Op::Add;
+		_ => {
+			std::printf("Expected operand, but got '%c'\n", c);
+			std::exit(1);
+			return mod::Op::Add;
+		}
+	}
+}
+
+fn count_line_width(content: str): int {
+	let c = 0;
+	while content[c] != '\0' && content[c] != '\n' {
+		c += 1;
+	}
+	return c;
+}
+

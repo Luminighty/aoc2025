@@ -66,3 +66,30 @@ fn range_size(range: *Range): int {
 
 }
 ```
+
+
+---
+
+Add support for never (!)
+```rs
+extern fn exit(code: int): !
+
+fn parse_op(lexer: *lex::Lexer): bool {
+	match lex::curr(lexer) {
+		'*' => return mod::Op::Mul;
+		'+' => return mod::Op::Add
+		_ => {
+			std::exit(1);
+			// currently have to return here
+		}
+	}
+}
+```
+
+---
+
+Add real support for varargs
+```rs
+// This is not possible currently
+std::panic("Unknown operand '%c'", op);
+```

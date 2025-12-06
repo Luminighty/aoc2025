@@ -5,6 +5,7 @@ const std = import "@stdlib"
 const mod = import "./mod"
 
 const filename = "./inputs/day01.txt";
+// const filename = "./inputs/day01_ex.txt";
 
 struct Input {
 	rotations: *mod::Rotation,
@@ -21,7 +22,9 @@ pub fn parse_input(): Input {
 	let lexer = lex::new(file.content, file.length);
 	for let i = 0; i < count; i += 1 {
 		parse_rotation(&lexer, &rotations[i]);
-		lex::consume(&lexer, '\n');
+		if i + 1 < count {
+			lex::consume(&lexer, '\n');
+		}
 	}
 
 	std::free(file.content);

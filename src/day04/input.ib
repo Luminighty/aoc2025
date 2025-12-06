@@ -16,13 +16,15 @@ pub fn parse_input(): grid::Grid {
 	let lexer = lex::new(file.content, file.length);
 
 	let height = string::line_count(file.content);
-	let count = std::strlen(file.content) - height;
-	let width = count / height;
+	let width = string::count_until(file.content, string::is_whitespace);
+	let count = height * width;
 
 	let map: *grid::Tile = std::malloc(sizeof(grid::Tile) * count);
-	for let i = 0; i < count; i += 1 {
-		map[i] = parse_tile(&lexer);
-		if i % height == width - 1 {
+	for let y = 0; y < height; y += 1 {
+		for let x = 0; x < width; x += 1 {
+			map[x + y*width] = parse_tile(&lexer);
+		}
+		if y + 1 < height {
 			lex::consume(&lexer, '\n');
 		}
 	}

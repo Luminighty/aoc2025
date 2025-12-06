@@ -22,7 +22,7 @@ pub fn read_file(file: *char): File {
 	let buffer: *char = std::malloc(size + 1);
 
 	std::fread(buffer, 1, size, file);
-	buffer[size] = '\0';
+	buffer[size - 1] = '\0';
 	std::fclose(file);
 
 	result.content = buffer;

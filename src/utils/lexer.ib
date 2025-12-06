@@ -48,6 +48,13 @@ pub fn parse_number(lexer: *Lexer): int {
 }
 
 
+pub fn consume_until(lexer: *Lexer, pred: fn(*char): bool) {
+	while lexer.current < lexer.length {
+		if !pred(at(lexer, lexer.current)) { break; }
+		step(lexer);
+	}
+}
+
 pub fn consume(lexer: *Lexer, c: char) {
 	if curr(lexer) != c {
 		std::printf("Expected '%c', but got '%c'\n", c, lexer.content[lexer.current]);

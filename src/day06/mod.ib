@@ -1,0 +1,76 @@
+const std = import "@stdlib"
+const input = import "./input"
+const input_rtl = import "./input_rtl"
+
+pub const TITLE = "Day 6: Trash Compactor";
+
+pub enum Op { Add, Mul, }
+pub struct Problem {
+	operands: *int,
+	operand_c: int,
+	op: Op,
+}
+
+pub fn solve_a() {
+	let inp = input::parse_input();
+	let sum = solve_problems(inp.problems, inp.count, false);
+	std::printf("Test Checksum: %ld\n", sum);
+}
+
+
+pub fn solve_b() {
+	let inp = input_rtl::parse_input();
+	let sum = solve_problems(inp.problems, inp.count, false);
+	std::printf("Test Checksum RTL: %ld\n", sum);
+}
+
+fn solve_problems(problems: *Problem, count: int, debug: bool): int {
+	let sum = 0;
+	for let i = 0; i < count; i+=1 {
+		let res = solve_problem(&problems[i]);
+		sum += res;
+		if debug {
+			print_problem(&problems[i]);
+			std::printf(" => %ld\n", res);
+		}
+	}
+	return sum;
+}
+
+fn solve_problem(problem: *Problem): int {
+	let res = problem.operands[0];
+	for let i = 1; i < problem.operand_c; i+=1 {
+		res = apply(res, problem.operands[i], problem.op);
+	}
+	return res;
+}
+
+fn print_problem(problem: *Problem) {
+	std::printf("Problem( ");
+	for let i = 0; i < problem.operand_c; i+=1 {
+		std::printf("%d", problem.operands[i]);
+		if i + 1 < problem.operand_c {
+			std::printf(" %c ", operand_char(problem.op));
+		}
+	}
+	std::printf(" = _ )");
+}
+
+fn apply(left: int, right: int, op: Op): int {
+	match op {
+		Op::Add => return left + right;
+		Op::Mul => return left * right;
+		_ => {
+			std::assert(false, "Unknown operand");
+			return -1;
+		}
+	}
+}
+
+fn operand_char(op: Op): char {
+	match op {
+		Op::Add => return '+';
+		Op::Mul => return '*';
+		_ => return '?';
+	}
+}

@@ -22,7 +22,9 @@ pub fn parse_input(): Input {
 	let banks: *mod::Bank = std::malloc(sizeof(mod::Bank) * (count));
 	for let i = 0; i < count; i += 1 {
 		parse_bank(&lexer, &banks[i]);
-		lex::consume(&lexer, '\n');
+		if i + 1 < count {
+			lex::consume(&lexer, '\n');
+		}
 	}
 
 	std::free(file.content);
@@ -32,7 +34,7 @@ pub fn parse_input(): Input {
 
 fn parse_bank(lexer: *lex::Lexer, bank: *mod::Bank) {
 	let c = 0;
-	while lex::curr(lexer) != '\n' {
+	while lex::curr(lexer) != '\n' && lex::curr(lexer) != '\0' {
 		bank.batteries[c] = lex::parse_digit(lexer);
 		c += 1;
 	}
