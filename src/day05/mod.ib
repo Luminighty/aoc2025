@@ -26,6 +26,7 @@ pub fn solve_a() {
 	}
 
 	std::printf("Fresh ingredients: %d\n", fresh_c);
+	std::free(inp.ranges);
 }
 
 fn is_fresh(id: int, range: *Range, range_c: int): bool {
@@ -79,6 +80,7 @@ pub fn solve_b() {
 	// 	std::printf("\n");
 	// }
 	std::printf("All fresh ingredients: %ld\n", sum);
+	std::free(inp.ranges);
 }
 
 

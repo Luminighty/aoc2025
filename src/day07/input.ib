@@ -1,0 +1,60 @@
+const fs = import "../utils/fs"
+const lex = import "../utils/lexer"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+
+const filename = "./inputs/day07.txt";
+// const filename = "./inputs/day07_ex.txt";
+
+
+pub fn parse_input(): mod::Map {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+
+	let lexer = lex::new(file.content, file.length);
+
+	let height = string::line_count(file.content);
+	let width = string::count_until(file.content, string::is_whitespace);
+	let tiles: *mod::Tile = std::malloc(sizeof(mod::Tile) * height * width);
+
+	let x = 0; let y = 0;
+	for let y = 0; y < height; y+=1 {
+		for let x = 0; x < width; x+=1 {
+			tiles[y * width + x] = parse_tile(&lexer);
+		}
+		if y + 1 < height {
+			lex::consume(&lexer, '\n');
+		}
+	}
+
+	std::free(file.content);
+	return mod::Map { width, height, tiles };
+}
+
+
+pub fn parse_tile(lexer: *lex::Lexer): mod::Tile {
+	match lex::curr(lexer) {
+		'.' => {
+			lex::step(lexer);
+			return mod::Tile::AIR;
+		}
+		'S' => {
+			lex::step(lexer);
+			return mod::Tile::BEAM;
+		}
+		'^' => {
+			lex::step(lexer);
+			return mod::Tile::SPLITTER;
+		}
+		_ => {
+			std::printf("Unknown tile '");
+			string::debug_char(lex::curr(lexer));
+			std::printf("'\n");
+			lex::print(lexer);
+			std::exit(1);
+			return mod::Tile::AIR;
+		}
+	}
+
+}

@@ -44,6 +44,16 @@ pub fn count_pred(s: str, pred: fn(str): bool): int {
 }
 
 
+pub fn debug_char(c: char) {
+	match c {
+		'\n' => std::printf("\\n\n"),
+		'\t' => std::printf("\\t"),
+		'\r' => std::printf("\\r"),
+		'\0' => std::printf("\\0"),
+		_ => std::putchar(c),
+	}
+}
+
 pub fn debug(s: str) {
 	let offset = 0;
 	loop {

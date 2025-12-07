@@ -15,6 +15,7 @@ pub fn solve_a() {
 	let inp = input::parse_input();
 	let sum = solve_problems(inp.problems, inp.count, false);
 	std::printf("Test Checksum: %ld\n", sum);
+	free(inp.problems, inp.count);
 }
 
 
@@ -22,6 +23,14 @@ pub fn solve_b() {
 	let inp = input_rtl::parse_input();
 	let sum = solve_problems(inp.problems, inp.count, false);
 	std::printf("Test Checksum RTL: %ld\n", sum);
+	free(inp.problems, inp.count);
+}
+
+fn free(problems: *Problem, count: int) {
+	for let i = 0; i < count; i+=1 {
+		std::free(problems[i].operands);
+	}
+	std::free(problems);
 }
 
 fn solve_problems(problems: *Problem, count: int, debug: bool): int {

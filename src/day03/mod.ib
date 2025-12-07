@@ -19,6 +19,7 @@ pub fn solve_a() {
 		// std::printf(" => %ld\n", max);
 	}
 	std::printf("Max total joltage: %d\n", sum);
+	std::free(inp.banks);
 }
 
 
@@ -48,6 +49,7 @@ pub fn solve_b() {
 		// std::printf("\n=> %ld\n", max);
 	}
 	std::printf("Max total joltage: %ld\n", sum);
+	std::free(inp.banks);
 }
 
 

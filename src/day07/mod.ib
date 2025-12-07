@@ -1,0 +1,125 @@
+const std = import "@stdlib"
+const input = import "./input"
+
+pub const TITLE = "Day 7: Laboratories";
+
+
+pub enum Tile {
+	AIR,
+	BEAM,
+	SPLITTER,
+}
+
+pub struct Map {
+	width: int,
+	height: int,
+	tiles: *Tile,
+}
+
+pub fn solve_a() {
+	let map = input::parse_input();
+	let splits = 0;
+	for let y = 1; y < map.height; y+=1 {
+		splits += simulate_row(&map, y);
+	}
+	// print_map(&map);
+	// std::printf("w: %d, h: %d", map.width, map.height);
+	std::printf("Total beam split: %d\n", splits);
+	std::free(map.tiles);
+}
+
+// Returns amount of splits
+fn simulate_row(map: *Map, y: int): int {
+	std::assert(y > 0, "Y cannot be row 0!");
+	let splits = 0;
+	for let x = 0; x < map.width; x+=1 {
+		if get(map, x, y - 1) != Tile::BEAM { continue; }
+		
+		if get(map, x, y) == Tile::SPLITTER {
+			splits += 1;
+			set(map, x - 1, y, Tile::BEAM);
+			set(map, x + 1, y, Tile::BEAM);
+		} else {
+			set(map, x, y, Tile::BEAM);
+		}
+	}
+	return splits;
+}
+
+pub fn solve_b() {
+	let map = input::parse_input();
+	let timelines: *int = std::malloc(sizeof(int) * map.width * map.height);
+	std::memset(timelines, 0, sizeof(int) * map.width * map.height);
+
+	for let x = 0; x < map.width; x+=1 {
+		if get(&map, x, 0) == Tile::BEAM { timelines[x] = 1; }
+	}
+
+	for let y = 1; y < map.height; y+=1 {
+		simulate_timeline_row(&map, timelines, y);
+	}
+
+	let timeline_c = 0;
+	for let x = 0; x < map.width; x+=1 {
+		timeline_c += timelines[idx(&map, x, map.height - 1)];
+	}
+
+	std::printf("Total timelines: %ld\n", timeline_c);
+	std::free(map.tiles);
+	std::free(timelines);
+}
+
+
+fn simulate_timeline_row(map: *Map, timelines: *int, y: int) {
+	std::assert(y > 0, "Y cannot be row 0!");
+	for let x = 0; x < map.width; x+=1 {
+		if get(map, x, y - 1) != Tile::BEAM { continue; }
+		let source_timeline = timelines[idx(map, x, y - 1)];
+
+		if get(map, x, y) == Tile::SPLITTER {
+			set_with_timeline(map, x - 1, y, Tile::BEAM, timelines, source_timeline);
+			set_with_timeline(map, x + 1, y, Tile::BEAM, timelines, source_timeline);
+		} else {
+			set_with_timeline(map, x, y, Tile::BEAM, timelines, source_timeline);
+		}
+	}
+}
+
+fn set_with_timeline(map: *Map, x: int, y: int, tile: Tile, timelines: *int, source_timeline: int) {
+	if x >= 0 && y >= 0 && x < map.width && y < map.height {
+		let index = idx(map, x, y);
+		map.tiles[index] = tile;
+		timelines[index] += source_timeline;
+	}
+}
+
+fn print_map(map: *Map) {
+	for let y = 0; y < map.height; y+=1 {
+	for let x = 0; x < map.width; x+=1 {
+		match get(map, x, y) {
+			Tile::BEAM => std::putchar('|'),
+			Tile::AIR => std::putchar('.'),
+			Tile::SPLITTER => std::putchar('^'),
+			_ => std::putchar('?'),
+		}
+		}
+		std::putchar('\n');
+	}
+}
+
+fn set(map: *Map, x: int, y: int, tile: Tile) {
+	if x >= 0 && y >= 0 && x < map.width && y < map.height {
+		map.tiles[idx(map, x, y)] = tile;
+	}
+}
+
+fn get(map: *Map, x: int, y: int): Tile {
+	if x < 0 || y < 0 || x >= map.width || y >= map.height {
+		return Tile::AIR;
+	}
+	return map.tiles[idx(map, x, y)];
+}
+
+fn idx(map: *Map, x: int, y: int): int {
+	return y * map.width + x;
+}
