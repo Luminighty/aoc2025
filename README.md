@@ -93,3 +93,43 @@ Add real support for varargs
 // This is not possible currently
 std::panic("Unknown operand '%c'", op);
 ```
+
+
+
+---
+
+Weird pass struct by value error
+
+```rs
+pub struct Vec3 {x: int, y: int, z: int}
+let box_c = 100;
+let boxes = std::malloc(sizeof(Vec3) * box_c);
+
+for let i = 0; i < box_count; i+=1 {
+for let j = i + 1; j < box_count; j+=1 {
+	// Before calling this, it segfaults
+	let d = distance(boxes[i], boxes[j]);
+}}
+
+fn distance(left: Vec3, right: Vec3): int {
+	let dx = left.x - right.x;
+	let dy = left.y - right.y;
+	let dz = left.z - right.z;
+	return (dx * dx) + (dy * dy) + (dz * dz);
+}
+```
+
+---
+
+
+Have to prealloc the stack at the start of funcs
+
+```rs
+// This would slowly fill the stack with copies of "Hello World\n" instead of reusing the same space. :(
+for let i = 0; i < 1000; i+=1 {
+for let j = 0; j < 1000; j+=1 {
+for let k = 0; k < 1000; k+=1 {
+	let v = "Hello World\n";
+	std::printf("Hello World\n");
+}}}
+```

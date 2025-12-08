@@ -1,0 +1,41 @@
+const fs = import "../utils/fs"
+const lex = import "../utils/lexer"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+
+const filename = "./inputs/day08.txt";
+// const filename = "./inputs/day08_ex.txt";
+
+struct Input {
+	boxes: *mod::Vec3,
+	count: int,
+}
+
+pub fn parse_input(): Input {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+
+	let lexer = lex::new(file.content, file.length);
+	let count = string::line_count(file.content);
+
+	let boxes: *mod::Vec3 = std::malloc(sizeof(mod::Vec3) * (count));
+	for let i = 0; i < count; i += 1 {
+		boxes[i] = parse_box(&lexer);
+		if i + 1 < count {
+			lex::consume(&lexer, '\n');
+		}
+	}
+
+	std::free(file.content);
+	return Input { boxes, count };
+}
+
+fn parse_box(lexer: *lex::Lexer): mod::Vec3 {
+	let x = lex::parse_number(lexer);
+	lex::consume(lexer, ',');
+	let y = lex::parse_number(lexer);
+	lex::consume(lexer, ',');
+	let z = lex::parse_number(lexer);
+	return mod::Vec3 { x, y, z };
+}

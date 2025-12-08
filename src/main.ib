@@ -6,7 +6,7 @@ const day04 = import "./day04/mod.ib"
 const day05 = import "./day05/mod.ib"
 const day06 = import "./day06/mod.ib"
 const day07 = import "./day07/mod.ib"
-
+const day08 = import "./day08/mod.ib"
 
 fn main(): int {
 	// title(&day01::TITLE); day01::solve_a(); day01::solve_b();
@@ -15,7 +15,8 @@ fn main(): int {
 	// title(&day04::TITLE); day04::solve_a(); day04::solve_b();
 	// title(&day05::TITLE); day05::solve_a(); day05::solve_b();
 	// title(&day06::TITLE); day06::solve_a(); day06::solve_b();
-	title(&day07::TITLE); day07::solve_a(); day07::solve_b();
+	// title(&day07::TITLE); day07::solve_a(); day07::solve_b();
+	title(&day08::TITLE); day08::solve_a(); day08::solve_b();
 
 	return 0;
 }

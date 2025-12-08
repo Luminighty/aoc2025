@@ -1,0 +1,225 @@
+const std = import "@stdlib"
+const input = import "./input"
+
+pub const TITLE = "Day 8: Playground";
+
+pub struct Vec3 {x: int, y: int, z: int}
+
+// const CONNECTIONS = 10;
+const CONNECTIONS = 1000;
+
+const PRINT_PROGRESS = true;
+
+pub fn solve_a() {
+	let inp = input::parse_input();
+	// for let i = 0; i < inp.count; i+=1 {
+	// 	print_vec(inp.boxes[i]);
+	// 	std::printf("\n");
+	// }
+	let boxes = inp.boxes;
+
+	let connections = find_connections(boxes, inp.count, CONNECTIONS, false);
+
+	// for let i = 0; i < connections.count; i+=1 {
+	// 	print_vec(boxes[connections.list[i].from]);
+	// 	std::printf("@%ld -> ", connections.list[i].from);
+	// 	print_vec(boxes[connections.list[i].to]);
+	// 	std::printf("@%ld := %ld", connections.list[i].to, connections.list[i].length);
+	// 	std::printf("\n");
+	// }
+
+	let circuits = create_circuits(inp.count, connections);
+	// for let i = 0; i < inp.count; i+=1 {
+	// 	if circuits[i] == -1 { continue; }
+	// 	std::printf("idx: %ld; id: %ld\n", i, circuits[i]);
+	// }
+
+	// Extra for buffer
+	let max_circuits = [-1, -1, -1, -1];
+	let max_circuit_sizes = [0, 0, 0, 0];
+	for let i = 0; i < inp.count; i+=1 {
+		if circuits[i] != i { continue; }
+		let size = circuit_size(circuits, inp.count, i);
+		insert_max(max_circuits, max_circuit_sizes, 3, i, size);
+	}
+
+	std::printf("max: [%d, %d, %d]\n", max_circuit_sizes[0], max_circuit_sizes[1],  max_circuit_sizes[2]);
+	let result = max_circuit_sizes[0] * max_circuit_sizes[1] * max_circuit_sizes[2];
+	std::printf("Result: %ld\n", result);
+	std::free(circuits);
+	std::free(connections.list);
+	std::free(inp.boxes);
+}
+
+fn insert_max(
+	max_circuits: *int, max_circuit_sizes: *int, max_count: int, 
+	id: int, size: int
+) {
+	let i = max_count - 1;
+	while i >= 0 {
+		if max_circuit_sizes[i] > size { break; }
+		max_circuit_sizes[i + 1] = max_circuit_sizes[i];
+		max_circuits[i + 1] = max_circuits[i];
+		i -= 1;
+	}
+	max_circuit_sizes[i + 1] = size;
+	max_circuits[i + 1] = id;
+}
+
+fn circuit_size(circuits: *int, count: int, id: int): int {
+	let c = 0;
+	for let i = 0; i < count; i+=1 {
+		if circuits[i] == id {
+			c += 1;
+		}
+	}
+	return c;
+}
+
+struct Connection {
+	from: int, to: int,
+	length: int
+}
+
+struct Connections {
+	list: *Connection,
+	count: int,
+	capacity: int,
+}
+
+fn foo() {
+  for let i = 0; i < 1000; i+=1 {
+    let v = i * 2;
+  }
+}
+
+// NOTE: Lengths are squared
+fn find_connections(boxes: *Vec3, box_count: int, max_connection: int, print_progress: bool): Connections {
+	let list = std::malloc(sizeof(Connection) * (max_connection + 1));
+	let connections = Connections {
+		list,
+		count: 0,
+		capacity: max_connection,
+	};
+	for let i = 0; i < box_count; i+=1 {
+	for let j = i + 1; j < box_count; j+=1 {
+	if print_progress {
+		std::printf("Finding connections... %ld/%ld\n", i, box_count);
+	}
+		let d = distance(&boxes[i], &boxes[j]);
+		insert_connection(&connections, i, j, d);
+	}}
+
+	return connections;
+}
+
+fn insert_connection(connections: *Connections, from: int, to: int, d: int) {
+	let i = connections.count - 1;
+	while i >= 0 {
+		if connections.list[i].length < d { break; }
+		connections.list[i + 1] = connections.list[i];
+		i -= 1;
+	}
+	connections.list[i + 1].from = from;
+	connections.list[i + 1].to = to;
+	connections.list[i + 1].length = d;
+	if connections.count < connections.capacity {
+		connections.count += 1;
+	}
+}
+
+fn distance(left: *Vec3, right: *Vec3): int {
+	let dx = left.x - right.x;
+	let dy = left.y - right.y;
+	let dz = left.z - right.z;
+	return (dx * dx) + (dy * dy) + (dz * dz);
+}
+
+fn create_circuits(box_c: int, connections: Connections): *int {
+	let circuits: *int = std::malloc(sizeof(int) * box_c);
+	std::memset(circuits, -1, sizeof(int) * box_c);
+	for let i = 0; i < connections.count; i+=1 {
+		apply_connection(circuits, box_c, &connections.list[i]);
+	}
+
+	return circuits;
+}
+
+fn apply_connection(circuits: *int, circuit_c: int, connection: *Connection): bool {
+	// print_connection(*connection);
+	let circuit_id = circuits[connection.from];
+	// Circuits are already merged
+	if circuit_id >= 0 && circuit_id == circuits[connection.to] {
+		return false;
+	}
+	// "To" is not connected, but "from" is, just update to
+	if circuit_id >= 0 && circuits[connection.to] == -1 {
+		circuits[connection.to] = circuit_id;
+		return true;
+	}
+	// "from" is not connected, check if "to" has a circuit
+	if circuit_id == -1 && circuits[connection.to] >= 0 {
+		circuits[connection.from] = circuits[connection.to];
+		return true;
+	}
+	// Neither are connected, use from, and establish a new circuit
+	if circuit_id == -1 {
+		circuit_id = connection.from;
+		circuits[connection.from] = connection.from;
+		circuits[connection.to] = connection.from;
+		return true;
+	}
+	let to_circuit_id = circuits[connection.to];
+	for let i = 0; i < circuit_c; i+=1 {
+		if circuits[i] == to_circuit_id {
+			circuits[i] = circuit_id;
+		}
+	}
+	return true;
+}
+
+pub fn solve_b() {
+	let inp = input::parse_input();
+	let boxes = inp.boxes;
+
+	// Find all connections sorted
+	let connections = find_connections(boxes, inp.count, inp.count * inp.count, PRINT_PROGRESS);
+	std::printf("connection count: %ld\n", connections.count);
+
+	let i = create_circuits_until_merged(inp.count, connections);
+	std::assert(i >= 0, "Could not find last connection required!");
+	print_connection(connections.list[i]);
+	let from = boxes[connections.list[i].from];
+	let to = boxes[connections.list[i].to];
+	print_vec(from); print_vec(to); std::printf("\n");
+	std::printf("Last Junction checksum: %ld\n", from.x * to.x);
+	// std::free(circuits);
+	std::free(connections.list);
+	std::free(inp.boxes);
+}
+
+// returns connection index once they are all merged
+fn create_circuits_until_merged(box_c: int, connections: Connections): int {
+	let circuits: *int = std::malloc(sizeof(int) * box_c);
+	std::memset(circuits, -1, sizeof(int) * box_c);
+	let merge_c = 0;
+	for let i = 0; i < connections.count; i+=1 {
+		if apply_connection(circuits, box_c, &connections.list[i]) {
+			merge_c += 1;
+		}
+		if merge_c >= box_c - 1 {
+			std::free(circuits);
+			return i;
+		}
+	}
+	std::free(circuits);
+	return -1;
+}
+
+fn print_vec(v: Vec3) {
+	std::printf("Vec3(%d, %d, %d)", v.x, v.y, v.z);
+}
+
+fn print_connection(connection: Connection) {
+	std::printf("Conn(%d -> %d)\n", connection.from, connection.to);
+}
