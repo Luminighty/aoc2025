@@ -1,0 +1,144 @@
+const std = import "@stdlib"
+const mod = import "./mod.ib"
+
+pub struct Matrix {
+	values: *int,
+	width: int,
+	height: int,
+}
+
+fn new(width: int, height: int): Matrix {
+	let size = sizeof(int) * width * height;
+	let values = std::malloc(size);
+	std::memset(values, 0, size);
+	return Matrix {
+		values, width, height,
+	};
+}
+
+fn set(matrix: *Matrix, x: int, y: int, value: int) { matrix.values[x + y * matrix.width] = value; }
+fn get(matrix: *Matrix, x: int, y: int): int { return matrix.values[x + y * matrix.width]; }
+fn destroy(matrix: *Matrix) { std::free(matrix.values); }
+fn print(matrix: *Matrix) {
+	for let y = 0; y < matrix.height; y+=1 {
+	for let x = 0; x < matrix.width; x+=1 {
+		std::printf("%d ", get(matrix, x, y));
+	}
+	std::printf("\n");
+	}
+}
+
+fn print_problem(matrix: *Matrix, target: *int) {
+	for let y = 0; y < matrix.height; y+=1 {
+	for let x = 0; x < matrix.width; x+=1 {
+		std::printf("%d ", get(matrix, x, y));
+	}
+	std::printf("| %d\n", target[y]);
+	}
+}
+
+fn from_machine(machine: *mod::Machine): Matrix {
+	let matrix = new(machine.button_count, machine.joltage_count);
+	for let i = 0; i < machine.button_count; i+=1 {
+	for let w = 0; w < machine.buttons[i].count; w+=1 {
+		set(&matrix, i, machine.buttons[i].wiring[w], 1);
+	}}
+	return matrix;
+}
+
+fn from_joltages(machine: *mod::Machine): *int {
+	let target: *int = std::malloc(sizeof(int) * machine.joltage_count);
+	for let i = 0; i < machine.joltage_count; i+=1 {
+		target[i] = machine.joltages[i];
+	}
+	return target;
+}
+
+pub fn solve_machine(machine: *mod::Machine): int {
+	let matrix = from_machine(machine);
+	let target: *int = std::malloc(sizeof(int) * machine.joltage_count);
+	std::memcpy(target, &machine.joltages, sizeof(int) * machine.joltage_count);
+
+	print(&matrix); std::printf("\n");
+	gauss(&matrix, target);
+	print(&matrix); std::printf("\n");
+	let sum = 0;
+	for let i = 0; i < machine.joltage_count; i+=1 {
+		std::printf("%d, ", target[i]);
+		sum += target[i];
+	}
+
+	std::free(target);
+	destroy(&matrix);
+	return sum;
+}
+
+
+fn gauss(matrix: *Matrix, target: *int) {
+	let iters = matrix.width;
+	if matrix.height < matrix.width { iters = matrix.height; }
+
+	for let col = 0; col < iters; col+=1 {
+		std::printf("===== ITER %d =====\n", col);
+		let row = find_row(matrix, col);
+		if row < 0 {
+			std::printf("Row not found, skipping\n");
+			continue;
+		}
+		// NOTE: Put row above the row search offset
+		if row != col { swap_rows(matrix, target, row, col); }
+		row = col;
+		// divide_row(matrix, target, row, get(matrix, col, row));
+
+		for let eliminate = 0; eliminate < matrix.height; eliminate+=1 {
+			if eliminate == row { continue; }
+			let v = get(matrix, col, eliminate);
+			if v == 0 { continue; }
+			add_multiple(matrix, target, eliminate, row, -v);
+		}
+		print_problem(matrix, target);
+	}
+}
+
+fn swap_rows(matrix: *Matrix, target: *int, from: int, to: int) {
+	std::printf("R%d <-> R%d\n", from, to);
+	for let x = 0; x < matrix.width; x+=1 {
+		let temp = get(matrix, x, from);
+		set(matrix, x, from, get(matrix, x, to));
+		set(matrix, x, to, temp);
+	}
+	let temp = target[from];
+	target[from] = target[to];
+	target[to] = temp;
+}
+
+
+fn divide_row(matrix: *Matrix, target: *int, row: int, value: int) {
+	std::printf("R%d /= %d\n", row, value);
+	for let x = 0; x < matrix.width; x+=1 {
+		let v = get(matrix, x, row);
+		std::assert(v%value != 0, "Matrix value is not divisible");
+		set(matrix, x, row, v / value);
+	}
+	std::assert(target[row] % value != 0, "Target value is not divisible");
+	target[row] /= value;
+}
+
+fn add_multiple(matrix: *Matrix, target: *int, target_row: int, source_row: int, source_mul: int) {
+	std::printf("R%d += R%d * %d\n", target_row, source_row, source_mul);
+	for let x = 0; x < matrix.width; x+=1 {
+		let target = get(matrix, x, target_row);
+		let source = get(matrix, x, source_row);
+		set(matrix, x, target_row, target + source * source_mul);
+	}
+	target[target_row] += target[source_row] * source_mul;
+}
+
+
+// NOTE: We are starting from the row "column" to filter out already used rows
+fn find_row(matrix: *Matrix, column: int): int {
+	for let i = column; i < matrix.height; i+=1 {
+		if get(matrix, column, i) != 0 { return i; }
+	}
+	return -1;
+}

@@ -1,0 +1,40 @@
+const std = import "@stdlib"
+const input = import "./input"
+
+pub const TITLE = "Day 9: Movie Theater";
+
+pub struct Vec2 {x: int, y: int}
+
+pub fn solve_a() {
+	let inp = input::parse_input();
+	// for let i = 0; i < inp.count; i+= 1 {
+	// 	print_vec(&inp.tiles[i]);
+	// 	std::printf("\n");
+	// }
+	let max = 0;
+	for let i = 0; i < inp.count; i+= 1 {
+	for let j = i + 1; j < inp.count; j+= 1 {
+		let s = rect_size(&inp.tiles[i], &inp.tiles[j]);
+		if s > max { max = s; }
+	}}
+	std::printf("max: %ld\n", max);
+}
+
+
+fn abs(v: int): int { if v < 0 { return -v; } return v; }
+
+fn rect_size(left: *Vec2, right: *Vec2): int {
+	let dx = abs(left.x - right.x) + 1;
+	let dy = abs(left.y - right.y) + 1;
+	return dx * dy;
+}
+
+pub fn solve_b() {
+	let inp = input::parse_input();
+	std::printf("solve_b\n");
+}
+
+
+fn print_vec(v: *Vec2) {
+	std::printf("Vec2(%d, %d)", v.x, v.y);
+}

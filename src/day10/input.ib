@@ -1,0 +1,111 @@
+const fs = import "../utils/fs"
+const lex = import "../utils/lexer"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+
+// const filename = "./inputs/day10.txt";
+const filename = "./inputs/day10_ex.txt";
+
+struct Input {
+	machines: *mod::Machine,
+	count: int,
+}
+
+pub fn parse_input(): Input {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+
+	let lexer = lex::new(file.content, file.length);
+	let count = string::line_count(file.content);
+
+	let machines: *mod::Machine = std::malloc(sizeof(mod::Machine) * (count));
+	for let i = 0; i < count; i += 1 {
+		parse_machine(&lexer, &machines[i]);
+		if i + 1 < count  {
+			lex::consume(&lexer, '\n');
+		}
+	}
+
+	std::free(file.content);
+	return Input { machines, count };
+}
+
+const MAX_BUTTONS = 16;
+
+fn parse_machine(lexer: *lex::Lexer, machine: *mod::Machine) {
+	parse_lights(lexer, &machine.lights);
+	lex::consume(lexer, ' ');
+	while lex::curr(lexer) == '(' {
+		std::assert(machine.button_count < MAX_BUTTONS, "Machine exceeded button count!");
+		parse_button(lexer, &machine.buttons[machine.button_count]);
+		machine.button_count += 1;
+		lex::consume(lexer, ' ');
+	}
+	machine.joltage_count = parse_joltages(lexer, &machine.joltages);
+}
+
+const MAX_LIGHTS = 12;
+fn parse_lights(lexer: *lex::Lexer, lights: *mod::Lights) {
+	lex::consume(lexer, '[');
+	let i = 0;
+	loop {
+		std::assert(i < MAX_LIGHTS, "Lights exceeded max count!");
+		match lex::curr(lexer) {
+			'.' => {
+				lights.state[i] = false;
+			}
+			'#' => {
+				lights.state[i] = true;
+			}
+			']' => break;
+			_ => {
+				std::printf("Unknown character while parsing light '%c'\n", lex::curr(lexer));
+				lex::print(lexer);
+				std::exit(1);
+			}
+		}
+		i += 1;
+		lex::step(lexer);
+	}
+	lights.count = i;
+	lex::consume(lexer, ']');
+}
+
+const MAX_WIRES = 12;
+fn parse_button(lexer: *lex::Lexer, button: *mod::Button) {
+	lex::consume(lexer, '(');
+	let i = 0;
+	loop {
+		std::assert(i < MAX_WIRES, "Wiring exceeded max count");
+		button.wiring[i] = lex::parse_number(lexer);
+		i += 1;
+		match lex::curr(lexer) {
+			',' => lex::step(lexer),
+			')' => break;
+			_ => {
+				std::printf("Unknown character while parsing button '%c'\n", lex::curr(lexer));
+				lex::print(lexer);
+				std::exit(1);
+			}
+		}
+	}
+	button.count = i;
+	lex::consume(lexer, ')');
+}
+
+const MAX_JOLTAGES = 16;
+// Returns joltage count
+fn parse_joltages(lexer: *lex::Lexer, joltages: *int): int {
+	lex::consume(lexer, '{');
+	let i = 0;
+	loop {
+		std::assert(i < MAX_JOLTAGES, "Joltages exceeded max count");
+		joltages[i] = lex::parse_number(lexer);
+		i += 1;
+		if lex::curr(lexer) == '}' { break; }
+		lex::consume(lexer, ',');
+	}
+	lex::consume(lexer, '}');
+	return i;
+}

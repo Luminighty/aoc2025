@@ -1,0 +1,229 @@
+const std = import "@stdlib"
+const input = import "./input"
+const gauss = import "./gauss"
+
+pub const TITLE = "Day 10: Factory";
+
+pub struct Lights {
+	state: bool[12],
+	count: int,
+}
+
+pub struct Button {
+	wiring: int[12],
+	count: int,
+}
+
+
+pub struct Machine {
+	lights: Lights,
+	buttons: Button[16],
+	button_count: int,
+	joltages: int[16],
+	joltage_count: int,
+}
+
+
+pub fn solve_a() {
+	let inp = input::parse_input();
+	// let max_lights = 0;
+	// let max_buttons = 0;
+	// let max_joltages = 0;
+	// for let i = 0; i < inp.count; i+=1 {
+	// 	if inp.machines[i].lights.count > max_lights {
+	// 		max_lights = inp.machines[i].lights.count;
+	// 	}
+	// 	if inp.machines[i].button_count > max_buttons {
+	// 		max_buttons = inp.machines[i].button_count;
+	// 	}
+	// 	if inp.machines[i].joltage_count > max_joltages {
+	// 		max_joltages = inp.machines[i].joltage_count;
+	// 	}
+	// }
+	// std::printf("light: %d; btn: %d, jolt: %d", max_lights, max_buttons, max_joltages);
+	let sum = 0;
+	for let i = 0; i < inp.count; i+=1 {
+		print_machine(&inp.machines[i]);
+		let presses = fewest_button_presses(&inp.machines[i]);
+		std::printf("\nFewest presses: %d\n", presses);
+		sum += presses;
+	}
+	std::printf("Sum: %d\n", sum);
+}
+
+fn lights_new(count: int): Lights {
+	return Lights {
+		state: [
+			false, false, false,
+			false, false, false,
+			false, false, false,
+			false, false, false,
+		],
+		count,
+	};
+}
+
+fn fewest_button_presses(machine: *Machine): int {
+	let current_lights = lights_new(machine.lights.count);
+	for let i = 1; i < machine.button_count; i+=1 {
+		if find_solution(machine, &current_lights, 0, i) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+fn find_solution(machine: *Machine, current_lights: *Lights, offset: int, buttons_left: int): bool {
+	if buttons_left == 0 { return is_lights_valid(machine, current_lights); }
+
+	for let i = offset; i < machine.button_count - buttons_left + 1; i+=1 {
+		press_lights(&machine.buttons[i], current_lights);
+		let res = find_solution(machine, current_lights, i + 1, buttons_left - 1);
+		if res { return true; }
+		press_lights(&machine.buttons[i], current_lights);
+	}
+
+	return false;
+}
+
+fn is_lights_valid(machine: *Machine, current_lights: *Lights): bool {
+	for let i = 0; i < current_lights.count; i+=1 {
+		if machine.lights.state[i] != current_lights.state[i] {
+			return false;
+		}
+	}
+	return true;
+}
+
+
+fn press_lights(button: *Button, lights: *Lights) {
+	for let i = 0; i < button.count; i+=1 {
+		lights.state[button.wiring[i]] = !lights.state[button.wiring[i]];
+	}
+}
+
+
+pub fn solve_b() {
+	let inp = input::parse_input();
+	let sum = 0;
+	for let i = 0; i < inp.count; i+=1 {
+		// let presses = fewest_button_presses_b(&inp.machines[i]);
+		print_machine(&inp.machines[i]);
+		std::printf("\n");
+		let presses = gauss::solve_machine(&inp.machines[i]);
+		// std::printf("Fewest presses B: %d\n", presses);
+		sum += presses;
+	}
+	std::printf("Sum: %d\n", sum);
+}
+
+fn fewest_button_presses_b(machine: *Machine): int {
+	// Minimum presses
+	let presses = 1;
+	for let i = 0; i < machine.joltage_count; i+=1 {
+		if machine.joltages[i] > presses { presses = machine.joltages[i]; }
+	}
+
+	let current = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	loop {
+		std::printf("Trying %d\n", presses);
+		if find_solution_b(machine, &current, 0, presses) {
+			return presses;
+		}
+		presses +=1;
+	}
+}
+
+fn find_solution_b(machine: *Machine, current: *int, offset: int, presses_left: int): bool {
+	if presses_left == 0 { return is_joltage_valid(machine, current); }
+
+	for let presses = presses_left; presses >= 0; presses -= 1 {
+	for let button = offset; button < machine.button_count; button+=1 {
+		if !can_press_n_times(machine, &machine.buttons[button], current, presses) {
+			continue;
+		}
+
+		press_jolt_n(&machine.buttons[button], current, presses);
+		let res = find_solution_b(machine, current, button + 1, presses_left - presses);
+		if res { return true; }
+		unpress_jolt_n(&machine.buttons[button], current, presses);
+	}}
+
+	return false;
+}
+
+fn is_joltage_valid(machine: *Machine, current: *int): bool {
+	for let i = 0; i < machine.joltage_count; i+=1 {
+		if machine.joltages[i] != current[i] {
+			return false;
+		}
+	}
+	return true;
+}
+
+fn can_press_n_times(machine: *Machine, button: *Button, joltages: *int, amount: int): bool {
+	for let i = 0; i < button.count; i+=1 {
+		let b = button.wiring[i];
+		if machine.joltages[b] < joltages[b] + amount {
+			return false;
+		}
+	}
+	return true;
+}
+
+fn unpress_jolt_n(button: *Button, joltages: *int, amount: int) {
+	for let i = 0; i < button.count; i+=1 {
+		joltages[button.wiring[i]] -= amount;
+	}
+}
+
+fn press_jolt_n(button: *Button, joltages: *int, amount: int) {
+	for let i = 0; i < button.count; i+=1 {
+		joltages[button.wiring[i]] += amount;
+	}
+}
+
+
+fn print_machine(machine: *Machine) {
+	print_light(&machine.lights);
+	std::printf(" ");
+	for let i = 0; i < machine.button_count; i+=1 {
+		print_button(&machine.buttons[i]);
+		std::printf(" ");
+	}
+	print_joltages(&machine.joltages, machine.joltage_count);
+}
+
+fn print_light(lights: *Lights) {
+	std::putchar('[');
+	for let i = 0; i < lights.count; i+=1 {
+		if lights.state[i] {
+			std::putchar('#');
+		} else {
+			std::putchar('.');
+		}
+	}
+	std::putchar(']');
+}
+
+fn print_button(button: *Button) {
+	std::putchar('(');
+	for let i = 0; i < button.count; i+=1 {
+		std::printf("%d", button.wiring[i]);
+		if i + 1 < button.count {
+			std::putchar(',');
+		}
+	}
+	std::putchar(')');
+}
+
+fn print_joltages(joltages: *int, count: int) {
+	std::putchar('{');
+	for let i = 0; i < count; i+=1 {
+		std::printf("%d", joltages[i]);
+		if i + 1 < count {
+			std::putchar(',');
+		}
+	}
+	std::putchar('}');
+}
