@@ -1,4 +1,5 @@
 const std = import "@stdlib"
+
 const day01 = import "./day01/mod.ib"
 const day02 = import "./day02/mod.ib"
 const day03 = import "./day03/mod.ib"
@@ -10,6 +11,7 @@ const day08 = import "./day08/mod.ib"
 const day09 = import "./day09/mod.ib"
 const day10 = import "./day10/mod.ib"
 const day11 = import "./day11/mod.ib"
+const day12 = import "./day12/mod.ib"
 
 fn main(): int {
 	// title(&day01::TITLE); day01::solve_a(); day01::solve_b();
@@ -22,8 +24,8 @@ fn main(): int {
 	// title(&day08::TITLE); day08::solve_a(); day08::solve_b();
 	// title(&day09::TITLE); day09::solve_a(); day09::solve_b();
 	// title(&day10::TITLE); day10::solve_a(); day10::solve_b();
-	title(&day11::TITLE); day11::solve_a(); day11::solve_b();
-
+	// title(&day11::TITLE); day11::solve_a(); day11::solve_b();
+	title(&day12::TITLE); day12::solve_a(); day12::solve_b();
 	return 0;
 }
 

@@ -139,10 +139,23 @@ for let k = 0; k < 1000; k+=1 {
 
 handle for duplicate names:
 
-```
+```rs
 const filename = "./inputs/day11.txt";
 const filename = "./inputs/day11_ex.txt";
 
 cc error: ./build/src_day11_input.ib.s: Assembler messages:
 ./build/src_day11_input.ib.s:27: Error: symbol `s234_filename' is already defined
+```
+
+---
+
+I think this is invalid:
+
+```rs
+let tile = [
+	false,false,false,
+	false,false,false,
+	false,false,false
+];
+return mod::Shape { tile, count };
 ```

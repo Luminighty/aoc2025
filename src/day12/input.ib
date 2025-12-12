@@ -1,0 +1,92 @@
+const fs = import "../utils/fs"
+const lex = import "../utils/lexer"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+
+const filename = "./inputs/day12.txt";
+// const filename = "./inputs/day12_ex.txt";
+
+const SHAPE_LINE_COUNT = 5;
+const SHAPE_COUNT = 6;
+
+struct Input {
+	shapes: *mod::Shape,
+	shape_count: int,
+	regions: *mod::Region,
+	region_count: int,
+}
+
+
+pub fn parse_input(): Input {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+
+	let lexer = lex::new(file.content, file.length);
+	let region_count = string::line_count(file.content) - (SHAPE_LINE_COUNT * SHAPE_COUNT);
+	let shape_count = SHAPE_COUNT;
+
+	let shapes: *mod::Shape = std::malloc(sizeof(mod::Shape) * (shape_count));
+	for let i = 0; i < shape_count; i+=1 {
+		shapes[i] = parse_shape(&lexer, i);
+		lex::consume(&lexer, '\n');
+	}
+
+	let regions: *mod::Region = std::malloc(sizeof(mod::Region) * (region_count));
+	for let i = 0; i < region_count; i += 1 {
+		regions[i] = parse_region(&lexer);
+		if i + 1 < region_count {
+			lex::consume(&lexer, '\n');
+		}
+	}
+
+	std::free(file.content);
+	return Input { shapes, regions, region_count, shape_count };
+}
+
+
+fn parse_region(lexer: *lex::Lexer): mod::Region {
+	let width = lex::parse_number(lexer);
+	lex::consume(lexer, 'x');
+	let height = lex::parse_number(lexer);
+	let region = mod::Region {
+		width, height, shape_count: [0, 0, 0, 0, 0, 0],
+	};
+	lex::consume(lexer, ':');
+	for let i = 0; i < SHAPE_COUNT; i+=1 {
+		lex::consume(lexer, ' ');
+		region.shape_count[i] = lex::parse_number(lexer);
+	}
+	return region;
+}
+
+fn parse_shape(lexer: *lex::Lexer, index: int): mod::Shape {
+	let i = lex::parse_number(lexer);
+	lex::consume(lexer, ':');
+	std::assert(i == index, "Other shape index expected!");
+	let shape = mod::Shape {
+		tile: [
+			false,false,false,
+			false,false,false,
+			false,false,false
+		],
+		count: 0,
+	};
+	for let i = 0; i < 9; i+=1 {
+		if i % 3 == 0 {
+			lex::consume(lexer, '\n');
+		}
+		match lex::curr(lexer) {
+			'.' => { shape.tile[i] = false; }
+			'#' => { shape.tile[i] = true; shape.count += 1; }
+			_ => {
+				std::printf("Unknown tile '%c'\n", lex::curr(lexer));
+				lex::print(lexer);
+				std::exit(1);
+			}
+		}
+		lex::step(lexer);
+	}
+	lex::consume(lexer, '\n');
+	return shape;
+}
