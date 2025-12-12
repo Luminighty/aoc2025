@@ -1,0 +1,159 @@
+const std = import "@stdlib"
+const input = import "./input"
+
+pub const TITLE = "Day 11: Reactor";
+
+pub struct Label { s: char[3] }
+pub struct Node { node: int, edges: int[32], count: int }
+
+pub fn solve_a() {
+	let inp = input::parse_input();
+	// for let i = 0; i < inp.count; i+=1 {
+	// 	print_label(&inp.labels[i]);
+	// 	std::putchar(' ');
+	// }
+	// std::putchar('\n');
+	// for let i = 0; i < inp.count; i+=1 {
+	// 	print_node(&inp.nodes[i], inp.labels);
+	// 	std::putchar('\n');
+	// }
+	let you = find_label(inp.labels, inp.count, "you");
+	let out = find_label(inp.labels, inp.count, "out");
+	std::assert(you >= 0, "you not found!");
+	std::assert(out >= 0, "out not found!");
+	let ways_out = count_ways_to_out(inp.nodes, you, out);
+	std::printf("you -> out: %d\n", ways_out);
+
+	std::free(inp.labels);
+	std::free(inp.nodes);
+}
+
+fn count_ways_to_out(nodes: *Node, current_node: int, target_node: int): int {
+	if current_node == target_node { return 1; }
+
+	let sum = 0;
+	for let i = 0; i < nodes[current_node].count; i+=1 {
+		let new_node = nodes[current_node].edges[i];
+		sum += count_ways_to_out(nodes, new_node, target_node);
+	}
+	return sum;
+}
+
+struct Cache {
+	
+
+}
+
+pub fn solve_b() {
+	let inp = input::parse_input();
+	// for let i = 0; i < inp.count; i+=1 {
+	// 	print_label(&inp.labels[i]);
+	// 	std::putchar(' ');
+	// }
+	// std::putchar('\n');
+	// for let i = 0; i < inp.count; i+=1 {
+	// 	print_node(&inp.nodes[i], inp.labels);
+	// 	std::putchar('\n');
+	// }
+
+	let cache: *int = std::malloc(sizeof(int) * inp.count);
+	std::memset(cache, -1, sizeof(int) * inp.count);
+	
+	let svr = find_label(inp.labels, inp.count, "svr");
+	let out = find_label(inp.labels, inp.count, "out");
+	let fft = find_label(inp.labels, inp.count, "fft");
+	let dac = find_label(inp.labels, inp.count, "dac");
+
+	std::assert(svr >= 0 && svr < inp.count, "svr not found!");
+	std::assert(out >= 0 && out < inp.count, "out not found!");
+	std::assert(fft >= 0 && fft < inp.count, "fft not found!");
+	std::assert(dac >= 0 && dac < inp.count, "dac not found!");
+
+	let ways_out = count_ways_to_out_b(
+		inp.nodes, inp.count, cache,
+		svr, out,
+		fft, dac,
+		false, false,
+	);
+	std::printf("svr -> out: %d\n", ways_out);
+
+	std::free(inp.labels);
+	std::free(inp.nodes);
+}
+
+fn count_ways_to_out_b(
+	nodes: *Node, count: int, cache: *int,
+	current_node: int, target_node: int,
+	fft_node: int, dac_node: int,
+	fft_visited: bool, dac_visited: bool
+): int {
+	std::printf("Processing node: %d\n", current_node);
+	std::assert(current_node >= 0, "Current Node OOB >=0");
+	std::assert(current_node < count, "Current Node OOB <count");
+	if cache[current_node] >= 0 { return cache[current_node]; }
+	if cache[current_node] == -2 {
+		// std::printf("Node is currently getting processed! %d", current_node); 
+		// std::exit(1);
+		return 0;
+	}
+	cache[current_node] = -2;
+	if current_node == target_node { 
+		if fft_visited && dac_visited { return 1; }
+		return 0;
+	}
+
+	fft_visited = fft_visited || current_node == fft_node;
+	dac_visited = dac_visited || current_node == dac_node;
+
+	let sum = 0;
+	for let i = 0; i < nodes[current_node].count; i+=1 {
+		let new_node = nodes[current_node].edges[i];
+		sum += count_ways_to_out_b(
+			nodes, count, cache,
+			new_node, target_node, 
+			fft_node, dac_node,
+			fft_visited, dac_visited
+		);
+	}
+	if sum > 0 {
+		cache[current_node] = sum;
+	}
+	return sum;
+}
+
+fn print_node(node: *Node, labels: *Label) {
+	std::printf("NODE[%d]\n", node.node);
+	print_label(&labels[node.node]);
+	std::putchar(':');
+	for let i = 0; i < node.count; i+=1 {
+		std::putchar(' ');
+		print_label(&labels[node.edges[i]]);
+	}
+}
+
+pub fn print_label(label: *Label) {
+	std::putchar(label.s[0]);
+	std::putchar(label.s[1]);
+	std::putchar(label.s[2]);
+}
+
+pub fn label_eq(left: *Label, right: *Label): bool {
+	return left.s[0] == right.s[0] &&
+		left.s[1] == right.s[1] &&
+		left.s[2] == right.s[2];
+}
+
+fn new_label(label: str): Label {
+	std::assert(std::strlen(label) == 3, "Label length was invalid!");
+	return Label {
+		s: [label[0], label[1], label[2]],
+	};
+}
+
+fn find_label(labels: *Label, count: int, label: str): int {
+	let l = new_label(label);
+	for let i = 0; i < count; i+=1 {
+		if label_eq(&l, &labels[i]) { return i; }
+	}
+	return -1;
+}

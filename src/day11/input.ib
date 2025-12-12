@@ -1,0 +1,92 @@
+const fs = import "../utils/fs"
+const lex = import "../utils/lexer"
+const string = import "../utils/string"
+const std = import "@stdlib"
+const mod = import "./mod"
+
+// const filename = "./inputs/day11.txt";
+// const filename = "./inputs/day11_ex.txt";
+const filename = "./inputs/day11_ex2.txt";
+
+
+struct Input {
+	labels: *mod::Label,
+	nodes: *mod::Node,
+	count: int,
+}
+
+pub fn parse_input(): Input {
+	let file = fs::read_file(&filename);
+	std::assert(file.success, "Failed to open file\n");
+
+	let lexer = lex::new(file.content, file.length);
+	// Extra one for out
+	let count = string::line_count(file.content) + 1;
+
+	let label_count = 0;
+	let labels: *mod::Label = std::malloc(sizeof(mod::Label) * (count));
+	let nodes: *mod::Node = std::malloc(sizeof(mod::Node) * (count));
+	std::memset(labels, 0, sizeof(mod::Label) * count);
+	std::memset(nodes, 0, sizeof(mod::Node) * count);
+
+	for let i = 0; i < count - 1; i += 1 {
+		let node_label = parse_label(&lexer);
+		let index = find_or_insert_label(labels, &label_count, &node_label);
+		lex::consume(&lexer, ':');
+		lex::consume(&lexer, ' ');
+		loop {
+			let edge_label = parse_label(&lexer);
+			let edge_index = find_or_insert_label(labels, &label_count, &edge_label);
+			std::assert(nodes[index].count < 32, "Max edge count exceeded.");
+			nodes[index].edges[nodes[index].count] = edge_index;
+			nodes[index].count += 1;
+			if lex::curr(&lexer) == ' ' {
+				lex::step(&lexer);
+				continue;
+			}
+			break;
+		}
+		if i + 1 < count - 1 {
+			lex::consume(&lexer, '\n');
+		}
+	}
+	for let i = 0; i < count; i += 1 {
+		nodes[i].node = i;
+	}
+
+	std::free(file.content);
+	return Input { labels, nodes, count };
+}
+
+fn parse_label_char(lexer: *lex::Lexer): char {
+	let a = lex::curr(lexer);
+	if a < 'a' || a > 'z' {
+		std::printf("Unknown label char '%c'\n", a);
+		lex::print(lexer);
+		std::exit(1);
+	}
+	lex::step(lexer);
+	return a;
+}
+
+fn parse_label(lexer: *lex::Lexer): mod::Label {
+	let a = parse_label_char(lexer);
+	let b = parse_label_char(lexer);
+	let c = parse_label_char(lexer);
+	return mod::Label { s: [a, b, c] };
+}
+
+fn find_or_insert_label(labels: *mod::Label, label_count: *int, label: *mod::Label): int {
+	for let i = 0; i < *label_count; i+=1 {
+		if mod::label_eq(&labels[i], label) {
+			return i;
+		}
+	}
+	std::printf("Inserting label[%d]: ", *label_count);
+	mod::print_label(label);
+	std::printf("\n");
+	let i = *label_count;
+	labels[i] = *label;
+	*label_count += 1;
+	return i;
+}

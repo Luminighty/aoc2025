@@ -133,3 +133,16 @@ for let k = 0; k < 1000; k+=1 {
 	std::printf("Hello World\n");
 }}}
 ```
+
+
+---
+
+handle for duplicate names:
+
+```
+const filename = "./inputs/day11.txt";
+const filename = "./inputs/day11_ex.txt";
+
+cc error: ./build/src_day11_input.ib.s: Assembler messages:
+./build/src_day11_input.ib.s:27: Error: symbol `s234_filename' is already defined
+```
