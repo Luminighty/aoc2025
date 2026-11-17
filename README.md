@@ -1,6 +1,6 @@
-# Advent of Code 2026
+# Advent of Code 2025
 
-My solutions to Advent of Code 2026 using `iblang` the language I'm developing.
+My solutions to Advent of Code 2025 using `iblang` the language I'm developing.
 
 ---
 
