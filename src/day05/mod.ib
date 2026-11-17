@@ -5,18 +5,9 @@ pub const TITLE = "Day 5: Cafeteria";
 
 pub struct Range { min: int, max: int }
 
+
 pub fn solve_a() {
 	let inp = input::parse_input();
-	// std::printf("%d\n", inp.range_c);
-	
-	// for let i = 0; i < inp.range_c; i+=1 {
-	// 	print_range(&inp.ranges[i]);
-	// 	std::printf("\n");
-	// }
-	//
-	// for let i = 0; i < inp.id_c; i+=1 {
-	// 	std::printf("%ld\n", inp.ids[i]);
-	// }
 
 	let fresh_c = 0;
 	for let i = 0; i < inp.id_c; i+=1 {
@@ -29,6 +20,7 @@ pub fn solve_a() {
 	std::free(inp.ranges);
 }
 
+
 fn is_fresh(id: int, range: *Range, range_c: int): bool {
 	for let i = 0; i < range_c; i+=1 {
 		if in_range(id, &range[i]) {
@@ -37,6 +29,7 @@ fn is_fresh(id: int, range: *Range, range_c: int): bool {
 	}
 	return false;
 }
+
 
 fn in_range(id: int, range: *Range): bool {
 	return range.min <= id && id <= range.max;

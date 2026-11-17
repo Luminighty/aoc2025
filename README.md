@@ -4,6 +4,22 @@ My solutions to Advent of Code 2026 using `iblang` the language I'm developing.
 
 ---
 
+## Todo List
+
+- [ ] Global String
+- [ ] int Autodereffing?
+- [ ] char -> int conversion
+- [ ] Better array init
+- [X] Enum Match error
+- [X] Unwrap on missing return statement
+- [X] Support for `never` flow
+- [ ] varags
+- [ ] Pass by struct error
+- [X] Stack preallocing!
+- [ ] Duplicate global names
+- [ ] struct array init with passing an array (error or support?)
+
+
 ## Oddities found:
 
 
@@ -30,6 +46,7 @@ fn apply_rotation(state: *int, rotation: *Rotation) {
 ---
 
 char -> int conversion may have unexpected behaviour due to unsigned -> signed
+
 ```rs
 let v = 0;
 let d: int = curr(lexer) - '0';
@@ -46,6 +63,7 @@ let s: char[32] = "                               ";
 
 ---
 
+[X]
 
 Exhausting all cases will lead to compilation error, since tile might be an int, even though all cases had returned.
 Maybe in this case, we should assert on this?
@@ -60,6 +78,7 @@ fn to_char(tile: Tile): char {
 
 ---
 
+[X]
 Should throw typecheck error instead of unwrap...
 ```rs
 fn range_size(range: *Range): int {
@@ -70,6 +89,7 @@ fn range_size(range: *Range): int {
 
 ---
 
+[X]
 Add support for never (!)
 ```rs
 extern fn exit(code: int): !
